@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "competitive-intelligence-search"
+version = "0.1.0"
+description = "Evaluate search retrieval quality against a ground-truth URL set (MRR)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "click>=8.1",
+  "httpx>=0.27",
+  "pydantic>=2,<3",
+  "python-dotenv>=1.0",
+  "rich>=13.7",
+]
+
+[project.scripts]
+ci-eval = "cli:cli"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["cli", "ground_truth", "metrics", "models", "persistence", "runner"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+

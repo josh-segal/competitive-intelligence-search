@@ -1,0 +1,82 @@
+{
+    "Notion": {
+      "Notion performance issues with large databases": [
+        "https://www.reddit.com/r/Notion/comments/1ddjmvi/slow_notion_databases_make_me_want_to_scream_here/",
+        "https://www.reddit.com/r/Notion/comments/12322on/i_find_notion_too_slow_for_any_serious_work_why/",
+        "https://www.reddit.com/r/Notion/comments/17br7zw/slow_performance_in_large_database/",
+        "https://www.reddit.com/r/Notion/comments/m96cx3/i_think_i_found_a_big_solution_to_the_notion_is/",
+        "https://news.ycombinator.com/item?id=43378239",
+        "https://news.ycombinator.com/item?id=40832146",
+        "https://news.ycombinator.com/item?id=35698521"
+      ],
+      "Notion complaints": [
+        "https://www.g2.com/products/notion/reviews?qs=pros-and-cons",
+        "https://www.g2.com/products/notion/competitors/alternatives"
+      ],
+      "customer complaints about Notion offline access": [
+        "https://www.reddit.com/r/Notion/comments/1e0qkn6/notion_losing_for_lack_of_offline_mode/",
+        "https://www.reddit.com/r/Notion/comments/m31z97/my_two_cents_and_then_some_on_notion_complaints/",
+        "https://www.reddit.com/r/Notion/comments/1anmcoa/offline_access/",
+        "https://www.reddit.com/r/Notion/comments/h7ad9x/honestly_the_more_i_think_about_it_the_more/",
+        "https://news.ycombinator.com/item?id=41683577"
+      ],
+      "missing features in Notion for project management": [
+        "https://www.reddit.com/r/Notion/comments/1blp3ir/what_is_the_missing_functionality_you_desire_the/",
+        "https://www.reddit.com/r/Notion/comments/1fnof87/missing_database_features_only_available_in_the/",
+        "https://www.reddit.com/r/Notion/comments/x1xhc2/why_is_notion_missing_so_many_basic_features/",
+        "https://www.reddit.com/r/Notion/comments/hxtmam/notion_is_a_good_for_storage_but_not_as_a_project/",
+        "https://news.ycombinator.com/item?id=35704823",
+        "https://news.ycombinator.com/item?id=26499810",
+        "https://www.reddit.com/r/Notion/comments/qxyvbu/the_ultimate_missing_features/"
+      ]
+    },
+    "Jira": {
+      "Jira limitations for software development teams": [
+        "https://medium.com/@ss-tech/jira-is-not-agile-why-your-team-should-stop-using-jira-80881befd703",
+        "https://project-management.com/the-pros-and-cons-of-using-jira-software/",
+        "https://www.reddit.com/r/agile/comments/1hnd86c/jira_is_not_agile_why_your_team_should_stop_using/",
+        "https://www.reddit.com/r/webdev/comments/1p0s3xw/jira_is_overkill_for_our_team_looking_for_a/",
+        "https://news.ycombinator.com/item?id=8990990",
+        "https://news.ycombinator.com/item?id=25590846"
+      ],
+      "Jira search and filtering problems": [
+        "https://news.ycombinator.com/item?id=46293092",
+        "https://news.ycombinator.com/item?id=25594072",
+        "https://www.reddit.com/r/jira/comments/126fdfj/how_to_improve_search_bar_in_jira/",
+        "https://www.unleash.so/a/blog/why-jira-search-is-so-frustrating-and-how-unleash-can-help",
+        "https://stackoverflow.com/questions/79098210/jql-in-a-filter-is-working-sometimes-and-sometimes-not"
+      ],
+      "customer complaints about Jira complexity": [
+        "https://community.atlassian.com/forums/App-Central-articles/3-frustrating-things-in-Jira-Service-Management-and-solutions/ba-p/2791721",
+        "https://www.g2.com/products/jira/reviews?qs=pros-and-cons",
+        "https://www.reddit.com/r/jira/comments/1125qg5/is_it_just_me_or_jira_is_not_very_user_friendly/",
+        "https://www.reddit.com/r/programming/comments/vgvt3m/i_fucking_hate_jira/",
+        "https://www.reddit.com/r/jira/comments/wf6ev6/what_would_you_say_what_are_your_biggest/"
+      ]
+    },
+    "Salesforce": {
+      "Salesforce limitations for small and medium businesses": [
+        "https://www.fastslowmotion.com/hidden-limitations-salesforce-free-crm/",
+        "https://scrumdigital.com/blog/assessing-salesforce-startups-recommendations-limitations-and-features/",
+        "https://www.reddit.com/r/salesforce/comments/1aq3l0f/salesforce_onboarding_for_new_customers_is/",
+        "https://www.reddit.com/r/salesforce/comments/lqu9h0/limitations_of_salesforce_and_workarounds/",
+        "https://www.reddit.com/r/salesforce/comments/1niuvcv/salesforce_sold_as_small_business_friendly/"
+      ],
+      "missing features in Salesforce for sales teams": [
+        "https://www.reddit.com/r/salesforce/comments/11q4vy6/is_it_normal_from_salesforce_to_leave_out/",
+        "https://www.reddit.com/r/salesforce/comments/1cc1ae5/salesforce_just_retired_a_feature_without_warning/",
+        "https://www.reddit.com/r/salesforce/comments/vv2jiv/salesforce_outlook_integration_unable_to_sync/"
+      ],
+      "Salesforce user interface complexity problems": [
+        "https://www.reddit.com/r/remotework/comments/1bojph9/why_does_salesforce_suck_so_bad/",
+        "https://www.reddit.com/r/salesforce/comments/17f5uu1/why_is_salesforces_ui_so_ugly/",
+        "https://www.reddit.com/r/sysadmin/comments/bga1d2/problems_with_salesforce_outlook_addin_with/"
+      ],
+      "customer complaints about Salesforce pricing and costs": [
+        "https://appvero.com/articles/salesforce-complaints-insights-resolutions/",
+        "https://www.webilize.com/en/blog-unveiling-the-limitations-the-top-10-worst-aspects-of-using-salesforce-as-a-crm",
+        "https://www.reddit.com/r/salesforce/comments/t7qwst/overpriced/",
+        "https://www.reddit.com/r/salesforce/comments/sf77kb/salesforce_pricing_is_broken/"
+      ]
+    }
+  }
