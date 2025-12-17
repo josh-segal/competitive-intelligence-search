@@ -4,7 +4,7 @@ import asyncio
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Literal
 
 import click
 from dotenv import load_dotenv
@@ -12,7 +12,9 @@ from rich.console import Console
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
 
-from adapters.exa import ExaConfig, ExaSearchAdapter
+from engines.exa import ExaConfig, ExaSearchEngine
+from engines.perplexity import PerplexityConfig, PerplexitySearchEngine
+from engines.tavily import TavilyConfig, TavilySearchEngine
 from ground_truth import load_eval_json
 from persistence import load_report, save_report
 from runner import EvaluationRunner, RunnerConfig
@@ -60,59 +62,75 @@ def cli() -> None:
 @click.option("--out", "out_path", type=click.Path(dir_okay=False), default=_default_output_path)
 @click.option("-k", type=int, default=10, show_default=True)
 @click.option("--concurrency", type=int, default=1, show_default=True)
+@click.option(
+    "--engine",
+    type=click.Choice(["exa", "perplexity", "tavily"], case_sensitive=False),
+    default="exa",
+    show_default=True,
+)
 @click.option("--exa-api-key", type=str, default=None)
-@click.option("--exa-base-url", type=str, default="https://api.exa.ai", show_default=True)
 @click.option(
     "--exa-search-type",
-    type=click.Choice(["auto", "neural", "keyword"], case_sensitive=False),
+    type=click.Choice(["auto", "neural", "fast", "deep"], case_sensitive=False),
     default="auto",
     show_default=True,
 )
-@click.option("--exa-use-autoprompt/--no-exa-use-autoprompt", default=True, show_default=True)
-@click.option("--exa-timeout-s", type=float, default=30.0, show_default=True)
+@click.option("--perplexity-api-key", type=str, default=None)
+@click.option("--tavily-api-key", type=str, default=None)
 def run(
     *,
     dataset_path: Path,
     out_path: str,
     k: int,
     concurrency: int,
+    engine: str,
     exa_api_key: str | None,
-    exa_base_url: str,
-    exa_search_type: str,
-    exa_use_autoprompt: bool,
-    exa_timeout_s: float,
+    exa_search_type: Literal["auto", "neural", "fast", "deep"],
+    perplexity_api_key: str | None,
+    tavily_api_key: str | None,
 ) -> None:
-    """Run evaluation (calls Exa) and write a JSON artifact to disk."""
+    """Run evaluation (calls selected engine) and write a JSON artifact to disk."""
     load_dotenv()
-    api_key = exa_api_key or os.getenv("EXA_API_KEY")
-    if not api_key:
-        raise click.ClickException("Missing EXA_API_KEY (set env var or pass --exa-api-key).")
 
     cases, dataset_sha256 = load_eval_json(dataset_path)
 
-    engine_cfg: dict[str, Any] = {
-        "base_url": exa_base_url,
-        "search_type": exa_search_type,
-        "use_autoprompt": exa_use_autoprompt,
-        "timeout_s": exa_timeout_s,
-    }
+    engine = (engine or "").strip().lower()
 
-    adapter = ExaSearchAdapter(
-        ExaConfig(
-            api_key=api_key,
-            base_url=exa_base_url,
-            search_type=exa_search_type.lower(),  # click normalizes but keep explicit
-            use_autoprompt=exa_use_autoprompt,
-            timeout_s=exa_timeout_s,
+    engine_obj: object
+
+    if engine == "exa":
+        api_key = exa_api_key or os.getenv("EXA_API_KEY")
+        if not api_key:
+            raise click.ClickException("Missing EXA_API_KEY (set env var or pass --exa-api-key).")
+
+        engine_obj = ExaSearchEngine(
+            ExaConfig(
+                api_key=api_key,
+                search_type=exa_search_type,
+            )
         )
-    )
+    elif engine == "perplexity":
+        api_key = perplexity_api_key or os.getenv("PERPLEXITY_API_KEY")
+        if not api_key:
+            raise click.ClickException(
+                "Missing PERPLEXITY_API_KEY (set env var or pass --perplexity-api-key)."
+            )
+        engine_obj = PerplexitySearchEngine(PerplexityConfig(api_key=api_key))
+    elif engine == "tavily":
+        api_key = tavily_api_key or os.getenv("TAVILY_API_KEY")
+        if not api_key:
+            raise click.ClickException(
+                "Missing TAVILY_API_KEY (set env var or pass --tavily-api-key)."
+            )
+        engine_obj = TavilySearchEngine(TavilyConfig(api_key=api_key))
+    else:
+        raise click.ClickException(f"Unknown engine: {engine}")
 
     runner = EvaluationRunner(
-        adapter=adapter,
+        engine=engine_obj,
         config=RunnerConfig(k=k, concurrency=concurrency),
         dataset_path=str(dataset_path),
         dataset_sha256=dataset_sha256,
-        engine_config=engine_cfg,
     )
 
     progress = Progress(
@@ -124,7 +142,7 @@ def run(
     )
 
     async def _go():
-        async with adapter:
+        async with engine_obj:
             task_id = progress.add_task("Searching", total=len(cases))
 
             def on_done(_evaluation, done: int, _total: int) -> None:

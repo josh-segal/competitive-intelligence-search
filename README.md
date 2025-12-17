@@ -12,17 +12,32 @@ Relevance is scored using **exact URL string matching**.
 
 ### Setup
 
-- **Environment**: set `EXA_API_KEY` (or pass `--exa-api-key`).
+- **Environment**: set the relevant API key for the engine you’re running:
+  - `EXA_API_KEY` (or pass `--exa-api-key`)
+  - `PERPLEXITY_API_KEY` (or pass `--perplexity-api-key`)
+  - `TAVILY_API_KEY` (or pass `--tavily-api-key`)
 - **Install** (editable):
 
 ```bash
 python -m pip install -e .
 ```
 
-### Run an evaluation (calls Exa)
+### Run an evaluation
 
 ```bash
-ci-eval run --dataset eval.json -k 10 --concurrency 10 --out results/results.json
+ci-eval run --engine exa --dataset eval.json -k 10 --concurrency 10 --out results/results.json
+```
+
+Perplexity:
+
+```bash
+ci-eval run --engine perplexity --dataset eval.json -k 10 --concurrency 10 --out results/results.json
+```
+
+Tavily:
+
+```bash
+ci-eval run --engine tavily --dataset eval.json -k 10 --concurrency 10 --out results/results.json
 ```
 
 Outputs:
@@ -38,6 +53,5 @@ ci-eval report results/results.json
 ### Notes
 
 - API failures are recorded per query and do not crash the run.
-- The JSON artifact includes a `schema_version` for forwards-compatible persistence.
 
 

@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from adapters.base import SearchAdapter
+from engines.base import SearchEngine
 from metrics import first_relevant_rank_exact, reciprocal_rank
 from models import (
     EvaluationAggregates,
@@ -20,24 +20,22 @@ from models import (
 @dataclass(frozen=True)
 class RunnerConfig:
     k: int = 10
-    concurrency: int = 10
+    concurrency: int = 1
 
 
 class EvaluationRunner:
     def __init__(
         self,
         *,
-        adapter: SearchAdapter,
+        engine: SearchEngine,
         config: RunnerConfig,
         dataset_path: str,
         dataset_sha256: str,
-        engine_config: dict[str, Any] | None = None,
     ) -> None:
-        self._adapter = adapter
+        self._engine = engine
         self._config = config
         self._dataset_path = dataset_path
         self._dataset_sha256 = dataset_sha256
-        self._engine_config = engine_config or {}
 
     async def run(
         self,
@@ -52,7 +50,7 @@ class EvaluationRunner:
 
         async def eval_one(case: QueryCase) -> QueryEvaluation:
             async with sem:
-                engine_run = await self._adapter.search(case.query_text, k=self._config.k)
+                engine_run = await self._engine.search(case.query_text, k=self._config.k)
 
             relevant_set = set(case.relevant_urls)
             first_rank = (
@@ -109,12 +107,11 @@ class EvaluationRunner:
         )
 
         metadata = RunMetadata(
-            engine_name=self._adapter.name,
+            engine_name=self._engine.name,
             k=self._config.k,
             concurrency=self._config.concurrency,
             dataset_path=self._dataset_path,
             dataset_sha256=self._dataset_sha256,
-            engine_config=self._engine_config,
         )
 
         return EvaluationReport(metadata=metadata, evaluations=evaluations, aggregates=aggregates)

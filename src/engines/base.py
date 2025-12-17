@@ -5,13 +5,13 @@ from abc import ABC, abstractmethod
 from models import EngineRunResult
 
 
-class SearchAdapter(ABC):
+class SearchEngine(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
         raise NotImplementedError
 
-    async def __aenter__(self) -> SearchAdapter:
+    async def __aenter__(self) -> SearchEngine:
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:

@@ -2,11 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, Field
-
-SCHEMA_VERSION = 1
 
 
 class EvalJson(BaseModel):
@@ -39,9 +37,6 @@ class QueryCase:
 class SearchResultItem(BaseModel):
     rank: int = Field(ge=1)
     url: str = Field(min_length=1)
-    title: str | None = None
-    snippet: str | None = None
-    raw: dict[str, Any] | None = None
 
     model_config = {
         "extra": "forbid",
@@ -85,14 +80,12 @@ class EvaluationAggregates(BaseModel):
 
 
 class RunMetadata(BaseModel):
-    schema_version: Literal[SCHEMA_VERSION] = SCHEMA_VERSION
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     engine_name: str = Field(min_length=1)
     k: int = Field(ge=1)
     concurrency: int = Field(ge=1)
     dataset_path: str = Field(min_length=1)
     dataset_sha256: str = Field(min_length=1)
-    engine_config: dict[str, Any] = Field(default_factory=dict)
 
     model_config = {
         "extra": "forbid",
