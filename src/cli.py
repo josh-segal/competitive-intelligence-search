@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from collections.abc import Iterable
 from contextlib import AsyncExitStack
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,6 +19,7 @@ from engines.exa import ExaConfig, ExaSearchEngine
 from engines.perplexity import PerplexityConfig, PerplexitySearchEngine
 from engines.tavily import TavilyConfig, TavilySearchEngine
 from ground_truth import load_eval_json
+from models import EvaluationReport, QueryCase
 from persistence import load_report, save_report
 from runner import EvaluationRunner, RunnerConfig
 
@@ -87,6 +89,104 @@ def _render_summary_tables(*, report) -> None:
         console.print(t)
 
 
+def _resolve_product_and_query_from_cases(
+    *, cases: Iterable[QueryCase], product_idx: int, query_idx: int
+) -> tuple[str, str]:
+    products = sorted({c.product for c in cases})
+    if product_idx < 0 or product_idx >= len(products):
+        raise click.ClickException(
+            f"Invalid --query PRODUCT_IDX={product_idx}. "
+            f"Valid range: [0, {max(0, len(products) - 1)}]. "
+            f"Products: {products}"
+        )
+
+    product = products[product_idx]
+    queries = sorted({c.query_text for c in cases if c.product == product})
+    if query_idx < 0 or query_idx >= len(queries):
+        raise click.ClickException(
+            f"Invalid --query QUERY_IDX={query_idx} for product={product!r}. "
+            f"Valid range: [0, {max(0, len(queries) - 1)}]. "
+            f"Queries: {queries}"
+        )
+
+    return product, queries[query_idx]
+
+
+def _resolve_product_and_query_from_report(
+    *, report: EvaluationReport, product_idx: int, query_idx: int
+) -> tuple[str, str]:
+    products = sorted({e.product for e in report.evaluations})
+    if product_idx < 0 or product_idx >= len(products):
+        raise click.ClickException(
+            f"Invalid --query PRODUCT_IDX={product_idx}. "
+            f"Valid range: [0, {max(0, len(products) - 1)}]. "
+            f"Products: {products}"
+        )
+
+    product = products[product_idx]
+    queries = sorted({e.query_text for e in report.evaluations if e.product == product})
+    if query_idx < 0 or query_idx >= len(queries):
+        raise click.ClickException(
+            f"Invalid --query QUERY_IDX={query_idx} for product={product!r}. "
+            f"Valid range: [0, {max(0, len(queries) - 1)}]. "
+            f"Queries: {queries}"
+        )
+
+    return product, queries[query_idx]
+
+
+def _render_single_query_table(*, report) -> None:
+    evals = list(report.evaluations or [])
+    if not evals:
+        raise click.ClickException("No evaluations found to render.")
+
+    def _display_url(url: str) -> str:
+        if url.startswith("https://www."):
+            return url[len("https://www.") :]
+        if url.startswith("https://"):
+            return url[len("https://") :]
+        return url
+
+    products = {e.product for e in evals}
+    queries = {e.query_text for e in evals}
+    if len(products) != 1 or len(queries) != 1:
+        raise click.ClickException(
+            "Single-query table requires a report filtered to exactly one (product, query). "
+            f"Got products={sorted(products)} queries={sorted(queries)}."
+        )
+
+    product = next(iter(products))
+    query_text = next(iter(queries))
+
+    console.print(f"[bold]Product[/bold]: {product}")
+    console.print(f"[bold]Query[/bold]: {query_text}")
+
+    by_engine = {e.engine_run.engine_name: e.engine_run for e in evals}
+    engine_names = sorted(by_engine.keys())
+
+    for engine_name in engine_names:
+        run = by_engine[engine_name]
+
+        console.print(f"\n[bold]{engine_name}[/bold]")
+        if run.error:
+            console.print(f"[red]ERROR[/red]: {run.error}")
+
+        t = Table(show_lines=False, expand=True)
+        t.add_column("", style="bold", justify="right")  # Rank
+        t.add_column("URL", overflow="fold")
+
+        results = list(run.results or [])
+        max_k_seen = max(1, len(results))
+        for rank in range(1, max_k_seen + 1):
+            idx = rank - 1
+            if 0 <= idx < len(results):
+                t.add_row(str(rank), _display_url(results[idx].url))
+            else:
+                t.add_row(str(rank), "")
+
+        console.print(t)
+
+
 @click.group()
 def cli() -> None:
     """Evaluate search engines against a ground-truth URL set and report MRR."""
@@ -109,6 +209,14 @@ def cli() -> None:
     default="all",
     show_default=True,
 )
+@click.option(
+    "--query",
+    "query_selector",
+    type=int,
+    nargs=2,
+    default=None,
+    help="Select a single dataset query to run: --query PRODUCT_IDX QUERY_IDX (0-based).",
+)
 @click.option("--exa-api-key", type=str, default=None)
 @click.option(
     "--exa-search-type",
@@ -125,6 +233,7 @@ def run(
     k: int,
     concurrency: int,
     engine: str,
+    query_selector: tuple[int, int] | None,
     exa_api_key: str | None,
     exa_search_type: Literal["auto", "neural", "fast", "deep"],
     perplexity_api_key: str | None,
@@ -134,6 +243,12 @@ def run(
     load_dotenv()
 
     cases, dataset_sha256 = load_eval_json(dataset_path)
+    if query_selector is not None:
+        product_idx, query_idx = query_selector
+        product, query_text = _resolve_product_and_query_from_cases(
+            cases=cases, product_idx=product_idx, query_idx=query_idx
+        )
+        cases = [c for c in cases if c.product == product and c.query_text == query_text]
 
     engine = (engine or "").strip().lower()
 
@@ -214,13 +329,24 @@ def run(
     save_report(report, out_path)
 
     console.print(f"[bold]Wrote[/bold] {out_path}")
-    _render_summary_tables(report=report)
+    if query_selector is not None:
+        _render_single_query_table(report=report)
+    else:
+        _render_summary_tables(report=report)
 
 
 @cli.command()
 @click.argument("artifact", type=click.Path(exists=True, dir_okay=False))
-def report(*, artifact: str) -> None:
-    """Render a saved JSON artifact (no network calls)."""
+@click.option(
+    "--query",
+    "query_selector",
+    type=int,
+    nargs=2,
+    default=None,
+    help="Select a single query to render: --query PRODUCT_IDX QUERY_IDX (0-based).",
+)
+def report(*, artifact: str, query_selector: tuple[int, int] | None) -> None:
+    """Render a saved JSON artifact."""
     r = load_report(artifact)
     meta = r.metadata
     engine_label = "all" if len(meta.engine_names) > 1 else meta.engine_names[0]
@@ -229,7 +355,16 @@ def report(*, artifact: str) -> None:
         f"[dim]created_at={meta.created_at.isoformat()} engine={engine_label} "
         f"k={meta.k} concurrency={meta.concurrency} dataset_sha256={meta.dataset_sha256}[/dim]"
     )
-    _render_summary_tables(report=r)
+    if query_selector is not None:
+        product_idx, query_idx = query_selector
+        product, query_text = _resolve_product_and_query_from_report(
+            report=r, product_idx=product_idx, query_idx=query_idx
+        )
+        filtered = [e for e in r.evaluations if e.product == product and e.query_text == query_text]
+        r2 = r.model_copy(update={"evaluations": filtered})
+        _render_single_query_table(report=r2)
+    else:
+        _render_summary_tables(report=r)
 
 
 if __name__ == "__main__":

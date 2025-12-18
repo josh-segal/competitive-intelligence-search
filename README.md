@@ -44,7 +44,7 @@ Outputs:
 - A JSON artifact at `--out` (reloadable without any API calls)
 - Rich tables summarizing overall MRR and per-product MRR
 
-### Render a saved artifact (no network)
+### Render a saved artifact
 
 ```bash
 ci-eval report results/results.json
