@@ -17,8 +17,6 @@ class PerplexityConfig:
 
 class PerplexitySearchEngine(SearchEngine):
     def __init__(self, config: PerplexityConfig) -> None:
-        # The Perplexity SDK supports reading from PERPLEXITY_API_KEY; set it explicitly
-        # to avoid relying on the caller's environment.
         if config.api_key:
             os.environ["PERPLEXITY_API_KEY"] = config.api_key
         self._client = AsyncPerplexity()

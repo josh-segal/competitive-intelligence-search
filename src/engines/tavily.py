@@ -28,13 +28,20 @@ class TavilySearchEngine(SearchEngine):
 
         try:
             resp = await self._client.search(
-                query=query,
-                max_results=k_eff,
+                query=query, max_results=k_eff, include_raw_content=True
             )
 
             items: list[SearchResultItem] = []
-            for i, r in enumerate(resp.get("results", []), start=1):
-                items.append(SearchResultItem(rank=i, url=r.get("url")))
+            raw_results = [r for r in resp.get("results", []) if (r.get("url") or "").strip()]
+            for i, r in enumerate(raw_results, start=1):
+                items.append(
+                    SearchResultItem(
+                        rank=i,
+                        url=r.get("url"),
+                        title=r.get("title"),
+                        content=r.get("raw_content"),
+                    )
+                )
 
             return EngineRunResult(
                 engine_name=self.name,

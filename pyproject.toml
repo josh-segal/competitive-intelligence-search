@@ -12,6 +12,7 @@ dependencies = [
   "click>=8.1",
   "exa-py",
   "httpx>=0.27",
+  "openai>=1.50.0",
   "perplexityai",
   "pydantic>=2,<3",
   "python-dotenv>=1.0",
@@ -24,7 +25,7 @@ ci-eval = "cli:cli"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["cli", "ground_truth", "metrics", "models", "persistence", "runner"]
+py-modules = ["cli", "ground_truth", "judge", "metrics", "models", "persistence", "runner"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

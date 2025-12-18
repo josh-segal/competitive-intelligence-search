@@ -36,6 +36,32 @@ class QueryCase:
 class SearchResultItem(BaseModel):
     rank: int = Field(ge=1)
     url: str = Field(min_length=1)
+    title: str | None = None
+    content: str | None = None
+
+    model_config = {
+        "extra": "forbid",
+    }
+
+
+class LLMJudgementItem(BaseModel):
+    rank: int = Field(ge=1)
+    explanation: str = Field(min_length=1)
+    query_relevance: float = Field(ge=0, le=1)
+    result_quality: float = Field(ge=0, le=1)
+    content_issues: bool
+    confidence: float = Field(ge=0, le=1)
+    overall: float = Field(ge=0, le=1)
+
+    model_config = {
+        "extra": "forbid",
+    }
+
+
+class LLMJudgeMetadata(BaseModel):
+    judged_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    model: str = Field(min_length=1)
+    prompt_version: str = Field(default="v1")
 
     model_config = {
         "extra": "forbid",
@@ -60,6 +86,7 @@ class QueryEvaluation(BaseModel):
     first_relevant_rank: int | None = Field(default=None, ge=1)
     reciprocal_rank: float = Field(ge=0)
     engine_run: EngineRunResult
+    llm_judgements: list[LLMJudgementItem] = Field(default_factory=list)
 
     model_config = {
         "extra": "forbid",
@@ -88,6 +115,7 @@ class RunMetadata(BaseModel):
     concurrency: int = Field(ge=1)
     dataset_path: str = Field(min_length=1)
     dataset_sha256: str = Field(min_length=1)
+    llm_judge: LLMJudgeMetadata | None = None
 
     model_config = {
         "extra": "forbid",

@@ -19,7 +19,7 @@ class ExaConfig:
 
 class ExaSearchEngine(SearchEngine):
     def __init__(self, config: ExaConfig) -> None:
-        self._exa = Exa(api_key=config.api_key)
+        self._client = Exa(api_key=config.api_key)
         self._search_type = config.search_type
 
     @property
@@ -29,12 +29,19 @@ class ExaSearchEngine(SearchEngine):
     async def search(self, query: str, *, k: int) -> EngineRunResult:
         try:
             response = await asyncio.to_thread(
-                self._exa.search, query, num_results=k, type=self._search_type
+                self._client.search, query, num_results=k, type=self._search_type
             )
 
             items: list[SearchResultItem] = []
             for i, r in enumerate(response.results, start=1):
-                items.append(SearchResultItem(rank=i, url=r.url))
+                items.append(
+                    SearchResultItem(
+                        rank=i,
+                        url=r.url,
+                        title=getattr(r, "title", None),
+                        content=getattr(r, "text", None),
+                    )
+                )
 
             return EngineRunResult(
                 engine_name=self.name,
