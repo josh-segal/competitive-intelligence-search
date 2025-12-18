@@ -18,6 +18,9 @@ Datasets are plain JSON files with this shape:
   }
 }
 ```
+- **`eval.json` (ground truth)**: each query maps to **one or more** relevant URLs.
+- **`eval2.json` (non-ground-truth / judge-only)**: uses the same schema, but each query’s relevant-URL list is **empty** (`[]`).
+
 
 
 ### Results
@@ -45,12 +48,6 @@ Datasets are plain JSON files with this shape:
 | Trello | 0.4430 | 0.4871 | 0.3440 | 0.3120 | 0.4250 |
 | Zendesk | 0.4620 | 0.5369 | 0.4800 | 0.3469 | 0.4308 |
 | Zoom | 0.5650 | 0.4723 | 0.5075 | 0.5005 | 0.4875 |
-
-
-
-
-- **`eval.json` (ground truth)**: each query maps to **one or more** relevant URLs.
-- **`eval2.json` (non-ground-truth / judge-only)**: uses the same schema, but each query’s relevant-URL list is **empty** (`[]`).
 
 
 ### Installation
