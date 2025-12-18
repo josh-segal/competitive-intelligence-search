@@ -1,0 +1,72 @@
+{
+    "Slack": {
+      "Slack performance issues with large organizations": [],
+      "customer complaints about Slack notification management": [],
+      "Slack limitations for remote teams in different time zones": [],
+      "Slack search functionality problems": [],
+      "missing features in Slack for project management": []
+    },
+    "HubSpot": {
+      "HubSpot limitations for enterprise marketing teams": [],
+      "customer complaints about HubSpot reporting accuracy": [],
+      "HubSpot integration problems with third-party tools": [],
+      "HubSpot pricing complaints from startups": [],
+      "HubSpot user interface complexity for non-technical users": []
+    },
+    "Asana": {
+      "Asana performance issues with complex project hierarchies": [],
+      "customer complaints about Asana mobile app functionality": [],
+      "Asana limitations for agile development teams": [],
+      "missing features in Asana for resource management": [],
+      "Asana collaboration problems in large organizations": []
+    },
+    "Monday.com": {
+      "Monday.com complaints about customization limitations": [],
+      "Monday.com performance issues with automated workflows": [],
+      "customer complaints about Monday.com pricing for small teams": [],
+      "Monday.com integration problems": [],
+      "Monday.com limitations for technical project management": []
+    },
+    "Zoom": {
+      "Zoom security concerns for healthcare organizations": [],
+      "customer complaints about Zoom call quality with poor internet": [],
+      "Zoom limitations for large virtual events": [],
+      "Zoom user interface problems for elderly users": [],
+      "missing features in Zoom for webinar analytics": []
+    },
+    "Trello": {
+      "Trello limitations for enterprise workflow management": [],
+      "customer complaints about Trello scalability with multiple boards": [],
+      "Trello performance issues": [],
+      "Trello missing features for time tracking and reporting": [],
+      "Trello collaboration problems in cross-functional teams": []
+    },
+    "Zendesk": {
+      "Zendesk limitations for multichannel customer support": [],
+      "customer complaints about Zendesk pricing structure": [],
+      "Zendesk user interface complexity for support agents": [],
+      "Zendesk integration problems with CRM systems": [],
+      "missing features in Zendesk for AI-powered automation": []
+    },
+    "Shopify": {
+      "Shopify limitations for high-volume international merchants": [],
+      "customer complaints about Shopify transaction fees": [],
+      "Shopify customization problems for unique business models": [],
+      "Shopify performance issues during peak sales events": [],
+      "missing features in Shopify for B2B wholesale operations": []
+    },
+    "Confluence": {
+      "Confluence search functionality problems in large knowledge bases": [],
+      "customer complaints about Confluence page loading speed": [],
+      "Confluence limitations for real-time collaboration": [],
+      "Confluence user interface complexity for new users": [],
+      "missing features in Confluence for version control and documentation": []
+    },
+    "Intercom": {
+      "Intercom limitations for technical product support teams": [],
+      "customer complaints about Intercom chatbot accuracy": [],
+      "Intercom pricing complaints from early-stage startups": [],
+      "Intercom integration problems with analytics platforms": [],
+      "missing features in Intercom for multilingual customer support": []
+    }
+  }

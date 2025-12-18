@@ -35,6 +35,5 @@ def load_eval_json(path: str | Path) -> tuple[list[QueryCase], str]:
                 )
             )
 
-    # Deterministic order for stable reporting (and easier diffs)
     cases.sort(key=lambda c: (c.product, c.query_text))
     return cases, dataset_sha256

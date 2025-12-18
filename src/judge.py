@@ -45,7 +45,7 @@ class JudgeConfig:
     concurrency: int = 1
     max_k: int | None = None
     prompt_version: str = "v1"
-    # Safety limits to prevent oversized judge requests (e.g., engines returning full HTML pages).
+    # prevent oversized judge requests
     max_title_chars: int = 200
     max_content_chars: int = 2000
 

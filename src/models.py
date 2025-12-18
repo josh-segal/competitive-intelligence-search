@@ -98,7 +98,6 @@ class EvaluationAggregates(BaseModel):
     hit_count: int = Field(ge=0)
     overall_mrr: float = Field(ge=0, le=1)
     per_product_mrr: dict[str, float] = Field(default_factory=dict)
-    # Optional multi-engine breakdowns (populated when running with multiple engines).
     per_engine_overall_mrr: dict[str, float] = Field(default_factory=dict)
     per_engine_hit_count: dict[str, int] = Field(default_factory=dict)
     per_engine_per_product_mrr: dict[str, dict[str, float]] = Field(default_factory=dict)
