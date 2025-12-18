@@ -269,6 +269,15 @@ def _render_single_query_table(*, report) -> None:
             return url[len("https://") :]
         return url
 
+    def _display_content(content: str | None, *, max_chars: int = 250) -> str:
+        if not content:
+            return ""
+        # Collapse whitespace to keep tables readable.
+        collapsed = " ".join(str(content).split())
+        if len(collapsed) <= max_chars:
+            return collapsed
+        return collapsed[: max(0, max_chars - 1)] + "…"
+
     products = {e.product for e in evals}
     queries = {e.query_text for e in evals}
     if len(products) != 1 or len(queries) != 1:
@@ -286,6 +295,10 @@ def _render_single_query_table(*, report) -> None:
     by_engine_eval = {e.engine_run.engine_name: e for e in evals}
     engine_names = sorted(by_engine_eval.keys())
 
+    meta_k = getattr(getattr(report, "metadata", None), "k", None)
+    max_rank_to_show = int(meta_k) if isinstance(meta_k, int) and meta_k >= 1 else None
+    any_judgements = any(bool(getattr(e, "llm_judgements", []) or []) for e in evals)
+
     for engine_name in engine_names:
         qe = by_engine_eval[engine_name]
         run = qe.engine_run
@@ -294,44 +307,51 @@ def _render_single_query_table(*, report) -> None:
         if run.error:
             console.print(f"[red]ERROR[/red]: {run.error}")
 
+        judgements = list(getattr(qe, "llm_judgements", []) or [])
+        by_rank_j = {j.rank: j for j in judgements}
+
         t = Table(show_lines=False, expand=True)
         t.add_column("", style="bold", justify="right")  # Rank
         t.add_column("URL", overflow="fold")
         t.add_column("Title", overflow="fold")
+        t.add_column("Content", overflow="fold")
+        if any_judgements:
+            t.add_column("Overall", justify="right")
+            t.add_column("Issues", justify="right")
+            t.add_column("Conf", justify="right")
+            t.add_column("Explanation", overflow="fold")
 
         results = list(run.results or [])
-        max_k_seen = max(1, len(results))
+        # Prefer a consistent 1..k view across engines when metadata is available.
+        max_k_seen = max(1, (max_rank_to_show or 0), len(results))
+        by_rank_result = {r.rank: r for r in results}
         for rank in range(1, max_k_seen + 1):
-            idx = rank - 1
-            if 0 <= idx < len(results):
-                r = results[idx]
-                t.add_row(str(rank), _display_url(r.url), (r.title or ""))
-            else:
-                t.add_row(str(rank), "", "")
+            r = by_rank_result.get(rank)
+            url = _display_url(r.url) if r is not None else ""
+            title = (r.title or "") if r is not None else ""
+            content = _display_content(getattr(r, "content", None)) if r is not None else ""
+
+            if not any_judgements:
+                t.add_row(str(rank), url, title, content)
+                continue
+
+            j = by_rank_j.get(rank)
+            if j is None:
+                t.add_row(str(rank), url, title, content, "", "", "", "")
+                continue
+
+            t.add_row(
+                str(rank),
+                url,
+                title,
+                content,
+                f"{j.overall:.3f}",
+                "Y" if j.content_issues else "",
+                f"{j.confidence:.3f}",
+                j.explanation,
+            )
 
         console.print(t)
-
-        judgements = list(getattr(qe, "llm_judgements", []) or [])
-        if judgements:
-            by_rank = {j.rank: j for j in judgements}
-            tj = Table(show_lines=False, expand=True)
-            tj.add_column("", style="bold", justify="right")  # Rank
-            tj.add_column("Overall", justify="right")
-            tj.add_column("Issues", justify="right")
-            tj.add_column("Conf", justify="right")
-            tj.add_column("Explanation", overflow="fold")
-            for r in results:
-                j = by_rank.get(r.rank)
-                if j is None:
-                    continue
-                tj.add_row(
-                    str(r.rank),
-                    f"{j.overall:.3f}",
-                    "Y" if j.content_issues else "",
-                    f"{j.confidence:.3f}",
-                    j.explanation,
-                )
-            console.print(tj)
 
 
 @click.group()

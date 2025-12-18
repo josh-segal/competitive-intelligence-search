@@ -45,17 +45,34 @@ class JudgeConfig:
     concurrency: int = 1
     max_k: int | None = None
     prompt_version: str = "v1"
+    # Safety limits to prevent oversized judge requests (e.g., engines returning full HTML pages).
+    max_title_chars: int = 200
+    max_content_chars: int = 2000
 
 
-def _build_payload(*, query_text: str, results: list[Any]) -> dict[str, Any]:
+def _build_payload(
+    *,
+    query_text: str,
+    results: list[Any],
+    max_title_chars: int,
+    max_content_chars: int,
+) -> dict[str, Any]:
+    def _truncate(text: str | None, *, max_chars: int) -> str | None:
+        if text is None:
+            return None
+        s = str(text)
+        if len(s) <= max_chars:
+            return s
+        return s[: max(0, max_chars - 1)] + "…"
+
     return {
         "query": query_text,
         "results": [
             {
                 "rank": r.rank,
                 "url": r.url,
-                "title": getattr(r, "title", None),
-                "content": getattr(r, "content", None),
+                "title": _truncate(getattr(r, "title", None), max_chars=max_title_chars),
+                "content": _truncate(getattr(r, "content", None), max_chars=max_content_chars),
             }
             for r in results
         ],
@@ -114,7 +131,7 @@ async def judge_report(
     sem = asyncio.Semaphore(max(1, int(config.concurrency)))
 
     async def judge_one(qe):
-        # Perplexity results currently don't carry content in our adapter; skip judging for now.
+        # Perplexity skip judging for now
         if qe.engine_run.engine_name == "perplexity":
             return qe
         if qe.engine_run.error:
@@ -128,7 +145,12 @@ async def judge_report(
             results = results[: max(1, int(config.max_k))]
 
         ranks = [r.rank for r in results]
-        payload = _build_payload(query_text=qe.query_text, results=results)
+        payload = _build_payload(
+            query_text=qe.query_text,
+            results=results,
+            max_title_chars=config.max_title_chars,
+            max_content_chars=config.max_content_chars,
+        )
 
         async with sem:
             try:
@@ -142,7 +164,23 @@ async def judge_report(
                     ],
                 )
             except Exception:
-                return qe
+                # Don't fail silently: emit placeholder judgements so CLI output isn't blank.
+                failed = [
+                    LLMJudgementItem(
+                        rank=rank,
+                        explanation=(
+                            "Judge request failed (likely oversized content). "
+                            "Try lowering --judge-max-k or truncating content."
+                        ),
+                        query_relevance=0.0,
+                        result_quality=0.0,
+                        content_issues=False,
+                        confidence=0.0,
+                        overall=0.0,
+                    )
+                    for rank in ranks
+                ]
+                return qe.model_copy(update={"llm_judgements": failed})
 
         text = (resp.choices[0].message.content or "").strip()
         try:
