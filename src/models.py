@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -73,6 +72,10 @@ class EvaluationAggregates(BaseModel):
     hit_count: int = Field(ge=0)
     overall_mrr: float = Field(ge=0, le=1)
     per_product_mrr: dict[str, float] = Field(default_factory=dict)
+    # Optional multi-engine breakdowns (populated when running with multiple engines).
+    per_engine_overall_mrr: dict[str, float] = Field(default_factory=dict)
+    per_engine_hit_count: dict[str, int] = Field(default_factory=dict)
+    per_engine_per_product_mrr: dict[str, dict[str, float]] = Field(default_factory=dict)
 
     model_config = {
         "extra": "forbid",
@@ -81,7 +84,7 @@ class EvaluationAggregates(BaseModel):
 
 class RunMetadata(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    engine_name: str = Field(min_length=1)
+    engine_names: list[str] = Field(min_length=1)
     k: int = Field(ge=1)
     concurrency: int = Field(ge=1)
     dataset_path: str = Field(min_length=1)

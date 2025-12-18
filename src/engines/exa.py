@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import time
 from dataclasses import dataclass
 from typing import Literal
@@ -30,7 +31,9 @@ class ExaSearchEngine(SearchEngine):
         started = time.monotonic()
 
         try:
-            response = self._exa.search(query, num_results=k, type=self._search_type)
+            response = await asyncio.to_thread(
+                self._exa.search, query, num_results=k, type=self._search_type
+            )
 
             items: list[SearchResultItem] = []
             for i, r in enumerate(response.results, start=1):
