@@ -25,7 +25,7 @@ class ExaSearchEngine(SearchEngine):
 
     @property
     def name(self) -> str:
-        return "exa"
+        return "exa-" + self._search_type
 
     async def search(self, query: str, *, k: int) -> EngineRunResult:
         started = time.monotonic()

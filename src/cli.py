@@ -257,9 +257,16 @@ def run(
     if engine == "all":
         engines = [
             ExaSearchEngine(
-                ExaConfig(
-                    api_key=exa_api_key or os.getenv("EXA_API_KEY"), search_type=exa_search_type
-                )
+                ExaConfig(api_key=exa_api_key or os.getenv("EXA_API_KEY"), search_type="auto")
+            ),
+            ExaSearchEngine(
+                ExaConfig(api_key=exa_api_key or os.getenv("EXA_API_KEY"), search_type="neural")
+            ),
+            ExaSearchEngine(
+                ExaConfig(api_key=exa_api_key or os.getenv("EXA_API_KEY"), search_type="fast")
+            ),
+            ExaSearchEngine(
+                ExaConfig(api_key=exa_api_key or os.getenv("EXA_API_KEY"), search_type="deep")
             ),
             PerplexitySearchEngine(
                 PerplexityConfig(api_key=perplexity_api_key or os.getenv("PERPLEXITY_API_KEY"))
@@ -307,6 +314,7 @@ def run(
         TextColumn("[progress.description]{task.description}"),
         BarColumn(),
         TaskProgressColumn(),
+        TextColumn("[red]E:{task.fields[errors]}[/red]"),
         TimeElapsedColumn(),
         console=console,
     )
@@ -316,11 +324,33 @@ def run(
             for e in engines:
                 await stack.enter_async_context(e)
 
-            total = len(cases) * len(engines)
-            task_id = progress.add_task("Searching", total=total)
+            per_engine_total = len(cases)
+            total = per_engine_total * len(engines)
 
-            def on_done(_evaluation, done: int, _total: int) -> None:
-                progress.update(task_id, completed=done)
+            overall_task_id: int | None = None
+            if len(engines) > 1:
+                overall_task_id = progress.add_task("Overall", total=total, errors=0)
+
+            task_id_by_engine: dict[str, int] = {
+                e.name: progress.add_task(e.name, total=per_engine_total, errors=0) for e in engines
+            }
+
+            errors_by_engine: dict[str, int] = {e.name: 0 for e in engines}
+            overall_errors = 0
+
+            def on_done(evaluation, _done: int, _total: int) -> None:
+                nonlocal overall_errors
+                engine_name = evaluation.engine_run.engine_name
+                had_error = evaluation.engine_run.error is not None
+                task_id = task_id_by_engine.get(engine_name)
+                if task_id is not None:
+                    if had_error:
+                        errors_by_engine[engine_name] = errors_by_engine.get(engine_name, 0) + 1
+                    progress.update(task_id, advance=1, errors=errors_by_engine.get(engine_name, 0))
+                if overall_task_id is not None:
+                    if had_error:
+                        overall_errors += 1
+                    progress.update(overall_task_id, advance=1, errors=overall_errors)
 
             with progress:
                 return await runner.run(cases, on_evaluation_complete=on_done)
