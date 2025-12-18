@@ -164,23 +164,7 @@ async def judge_report(
                     ],
                 )
             except Exception:
-                # Don't fail silently: emit placeholder judgements so CLI output isn't blank.
-                failed = [
-                    LLMJudgementItem(
-                        rank=rank,
-                        explanation=(
-                            "Judge request failed (likely oversized content). "
-                            "Try lowering --judge-max-k or truncating content."
-                        ),
-                        query_relevance=0.0,
-                        result_quality=0.0,
-                        content_issues=False,
-                        confidence=0.0,
-                        overall=0.0,
-                    )
-                    for rank in ranks
-                ]
-                return qe.model_copy(update={"llm_judgements": failed})
+                return qe
 
         text = (resp.choices[0].message.content or "").strip()
         try:
