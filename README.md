@@ -76,6 +76,16 @@ python -m pip install -e .
 ci-eval run
 ```
 
+![Example CLI process](images/max_cli.png)
+
+#### View a LLM-as-judge single query output evaluation with Exa Fast
+
+```bash
+ci-eval run --judge --query 0 0
+```
+
+![Example single query judge result](images/single_query_judge.png)
+
 **Full Usage**:
 
 ```bash
