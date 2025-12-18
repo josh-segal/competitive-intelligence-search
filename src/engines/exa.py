@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import time
 from dataclasses import dataclass
 from typing import Literal
 
@@ -28,8 +27,6 @@ class ExaSearchEngine(SearchEngine):
         return "exa-" + self._search_type
 
     async def search(self, query: str, *, k: int) -> EngineRunResult:
-        started = time.monotonic()
-
         try:
             response = await asyncio.to_thread(
                 self._exa.search, query, num_results=k, type=self._search_type
@@ -39,21 +36,17 @@ class ExaSearchEngine(SearchEngine):
             for i, r in enumerate(response.results, start=1):
                 items.append(SearchResultItem(rank=i, url=r.url))
 
-            latency_ms = (time.monotonic() - started) * 1000
             return EngineRunResult(
                 engine_name=self.name,
                 query_text=query,
                 results=items,
                 error=None,
-                latency_ms=latency_ms,
             )
         except Exception as e:
-            latency_ms = (time.monotonic() - started) * 1000
             msg = str(e)
             return EngineRunResult(
                 engine_name=self.name,
                 query_text=query,
                 results=[],
                 error=msg,
-                latency_ms=latency_ms,
             )

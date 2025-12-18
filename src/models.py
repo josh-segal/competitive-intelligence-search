@@ -47,7 +47,6 @@ class EngineRunResult(BaseModel):
     query_text: str = Field(min_length=1)
     results: list[SearchResultItem] = Field(default_factory=list)
     error: str | None = None
-    latency_ms: float | None = Field(default=None, ge=0)
 
     model_config = {
         "extra": "forbid",
